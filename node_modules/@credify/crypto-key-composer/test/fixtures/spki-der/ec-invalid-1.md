@@ -1,1 +1,0 @@
-> A EC SPKI-DER key with an invalid curve (manually crafted)

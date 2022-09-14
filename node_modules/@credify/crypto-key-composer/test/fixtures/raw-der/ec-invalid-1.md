@@ -1,1 +1,0 @@
-> A EC RAW-DER key with an invalid curve (manually crafted)
