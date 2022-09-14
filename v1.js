@@ -20,15 +20,53 @@ module.exports = () => {
     // TODO: Please update this request body
 
     // This should be string
-    const referenceId = req.referenceId
+    const referenceId = req.reference_id
 
-    // This should be an object { value: "12000000", currency: "vnd" }
-    const totalAmount = req.totalAmount
+    /**
+     * {Object}
+     * @example
+     * {
+     *   "value": "9000000",
+     *   "currency": "VND"
+     * }
+     */
+    const totalAmount = req.total_amount
 
-    // This should be an object array
-    const orderLines = req.orderLines
+    /**
+     * {Array<Object>}
+     * @example
+     * [
+     *   {
+     *     "name": "iPhone 12",
+     *     "reference_id": "iphone-12-black",
+     *     "image_url": "https://www.apple.com/v/iphone-12/j/images/specs/finish_iphone12__ctf4hoqpbnki_large_2x.jpg",
+     *     "product_url": "https://www.apple.com/vn/iphone-12/specs/",
+     *     "quantity": 1,
+     *     "unit_price": {
+     *       "value": "9000000",
+     *       "currency": "VND"
+     *     },
+     *     "subtotal": {
+     *       "value": "9000000",
+     *       "currency": "VND"
+     *     },
+     *     "measurement_unit": "EA"
+     *   }
+     * ]
+     */
+    const orderLines = req.order_lines
 
     // This is a recipient bank account info
+    /**
+     * {Object}
+     * @example
+     * {
+     *   "name": "Apple VN",
+     *   "number": "190123123123",
+     *   "branch": "",
+     *   "bank": "Techcombank"
+     * }
+     */
     const paymentRecipient = {
       name: "Demo store",
       number: "xxxxxxxxxxx",
@@ -45,6 +83,49 @@ module.exports = () => {
         paymentRecipient
       )
       res.json(data)
+    } catch (e) {
+      res.status(400).json({ error: { message: e.message } })
+    }
+  })
+
+  api.post("/simulate", async (req, res) => {
+    const productType = "consumer-financing:unsecured-loan:bnpl"
+    
+    // TODO: Please update this request body
+
+    // This should be string array (can be empty)
+    const providerIds = req.body.provider_ids
+
+    // This should be an object
+    /**
+     * {
+     *   "market_id": "",
+     *   "transaction_amount": {
+     *     "value": "1200000",
+     *     "currency": "VND"
+     *   },
+     *   "loan_tenor": {
+     *     "value": 30,
+     *     "unit": "DAY"
+     *   },
+     *   "disbursement_date": "2022-12-25",
+     *   "product": {
+     *     "manufacturer": "",
+     *     "category": "",
+     *     "name": ""
+     *   },
+     *   "down_payment": {
+     *     "value": "200000",
+     *     "currency": "VND"
+     *   }
+     * }
+     */
+    const inputs = req.body.inputs
+
+    try {
+      const credify = await Credify.create(formKey(signingKey), apiKey, { mode })
+      const response = await credify.offer.simulate(productType, providerIds, inputs)
+      res.json(response)
     } catch (e) {
       res.status(400).json({ error: { message: e.message } })
     }
