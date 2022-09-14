@@ -1,0 +1,21 @@
+{
+  "name": "bnpl-skeleton-nodejs",
+  "version": "1.0.0",
+  "main": "app.js",
+  "repository": "https://github.com/credify-pte-ltd/bnpl-skeleton-nodejs.git",
+  "author": "credify-pte-ltd",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "@credify/nodejs": "^1.21.0",
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
