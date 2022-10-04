@@ -6,8 +6,7 @@ const {WEBHOOK_EVENTS} = require("./constants");
 const signingKey = ""
 const apiKey = ""
 const mode = "sandbox" // "sandbox" or "production"
-const apiDomain = "https://example.com"
-const bnplCallbackUrl = "https://example.com"
+const apiDomain = "https://stg.api.dienthoaigiakho.vn"
 
 module.exports = () => {
   const api = Router()
@@ -68,11 +67,12 @@ module.exports = () => {
      * }
      */
     const paymentRecipient = {
-      name: "Demo store",
-      number: "xxxxxxxxxxx",
-      branch: "",
-      bank: "XXX Bank"
-    }
+      name: "Công ty TNHH GIÁ KHO GROUP",
+      number: "0020100026725004",
+      branch: "006",
+      bank: "333",
+      type: "BANK_ACCOUNT"
+    };
 
     try {
       const credify = await Credify.create(formKey(signingKey), apiKey, { mode })
@@ -90,7 +90,7 @@ module.exports = () => {
 
   api.post("/simulate", async (req, res) => {
     const productType = "consumer-financing:unsecured-loan:bnpl"
-    
+
     // TODO: Please update this request body
 
     // This should be string array (can be empty)
@@ -170,7 +170,33 @@ module.exports = () => {
           // BNPL order is updated
           orderId = req.body.order_id;
           const status = req.body.order_status;
-          // TODO: BNPL order status is updated
+          const referenceId = req.body.reference_id;
+
+          try {
+            const { data } = await axios.get(
+              `${apiDomain}/api/v2/sale-orders/${referenceId}`
+            );
+            const internalOrderInfo = data.extra_data;
+            const currentOrderStatus = internalOrderInfo.bnplTx.status
+            if (currentOrderStatus === status) {
+              return res.status(200).json({ message: "No update" })
+            }
+            const res = await axios.patch(
+              `${apiDomain}/api/v2/sale-orders/${referenceId}`,
+              {
+                extra_data: {
+                  ...internalOrderInfo,
+                  bnplTx: {
+                    orderId,
+                    status,
+                  },
+                },
+              }
+            );
+          } catch (e) {
+            return res.status(500).json({ message: e.message })
+          }
+
           break
         case WEBHOOK_EVENTS.DISBURSEMENT_STATUS_UPDATED:
           // BNPL disbursement docs are confirmed
@@ -179,6 +205,7 @@ module.exports = () => {
           break
       }
 
+      return res.status(200).json({ message: "Success" })
     } catch (e) {
       res.json({ error: { message: e.message } })
     }
@@ -186,10 +213,16 @@ module.exports = () => {
 
   api.get("/bnpl/orders/:orderId/redirect", async (req, res) => {
     const orderId = req.params.orderId;
+    const isError = !!req.query.error_message;
+
+    const base = "https://dienthoaigiakho.vn"
+
+    const url = isError ? `${base}/mua-tra-gop` : `${base}/mua-tra-gop/success`;
+
     if (!orderId) {
       return res.sendStatus(500).json({ message: "No order ID" })
     }
-    res.redirect(bnplCallbackUrl)
+    res.redirect(url)
   })
 
   return api
