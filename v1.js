@@ -71,7 +71,8 @@ module.exports = () => {
       name: "Demo store",
       number: "xxxxxxxxxxx",
       branch: "",
-      bank: "XXX Bank"
+      bank: "XXX Bank",
+      type: "BANK_ACCOUNT"
     }
 
     try {
@@ -90,7 +91,7 @@ module.exports = () => {
 
   api.post("/simulate", async (req, res) => {
     const productType = "consumer-financing:unsecured-loan:bnpl"
-    
+
     // TODO: Please update this request body
 
     // This should be string array (can be empty)

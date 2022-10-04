@@ -1,5 +1,4 @@
-FROM node:14-alpine
-RUN apk add --no-cache python2 g++ make
+FROM node:alpine
 WORKDIR /app
 COPY . .
 RUN yarn install --production

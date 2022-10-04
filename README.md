@@ -25,6 +25,14 @@ This exposes 3 endpoints
   - This returns BNPL completion page. Service Providers redirect users to this URL when BNPL authorization is done.
 
 
+## How to use with Docker
+
+```shell
+$ docker build -t bnpl-server .
+$ docker run -dp 8000:8000 bnpl-server
+$ curl 'http://localhost:8000/v1'
+```
+
 ## How to customize
 
 When you integrate BNPL, please update `v1.js` to add your own logic.
