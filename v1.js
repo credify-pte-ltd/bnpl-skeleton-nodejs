@@ -1,12 +1,15 @@
 const { Router } = require("express")
 const { Credify } = require("@credify/nodejs")
-const { formKey } = require("./utils")
+const { formKey, getCategoryItem } = require("./utils")
 const {WEBHOOK_EVENTS} = require("./constants");
+const axios = require("axios");
+const dotenv = require('dotenv');
+dotenv.config();
 
-const signingKey = ""
-const apiKey = ""
-const mode = "sandbox" // "sandbox" or "production"
-const apiDomain = "https://stg.api.dienthoaigiakho.vn"
+const signingKey = process.env.SIGNING_KEY
+const apiKey = process.env.API_KEY
+const mode = process.env.MODE // "sit" or "production"
+const apiDomain = process.env.URL_BASE_MARKET_API
 
 module.exports = () => {
   const api = Router()
@@ -71,7 +74,7 @@ module.exports = () => {
       number: "0020100026725004",
       branch: "006",
       bank: "333",
-      type: "BANK_ACCOUNT"
+      type: "BANK_ACCOUNT",
     };
 
     try {
@@ -91,12 +94,14 @@ module.exports = () => {
   });
 
   api.post("/simulation", async (req, res) => {
-    const productType = "consumer-financing:unsecured-loan:bnpl";
+    const productType = req.body.product_type;
 
     // TODO: Please update this request body
 
     // This should be string array (can be empty)
-    const providerIds = req.body.provider_ids
+    const providerIds = req.body.provider_ids || [
+      "09de7359-7f29-41a0-bd07-095d1ce7f85d",
+    ];
 
     // This should be an object
     /**
@@ -252,7 +257,6 @@ module.exports = () => {
 
     /**
      * {Object}
-     * @example
      * {
       "phone_number": "999720410",
       "country_code": "+81",
@@ -275,12 +279,11 @@ module.exports = () => {
       credify_id: req.body.credify_id,
       product_types: req.body.product_types,
       bnpl: {
-        item_category: req.body.bnpl.item_category,
+        item_category: getCategoryItem(req.body.bnpl.item_category),
         item_count: req.body.bnpl.item_count,
         total_amount: req.body.bnpl.total_amount,
       },
     };
-
     try {
       const credify = await Credify.create(formKey(signingKey), apiKey, {
         mode,
@@ -292,5 +295,5 @@ module.exports = () => {
     }
   });
 
-  return api
+  return api;
 }
