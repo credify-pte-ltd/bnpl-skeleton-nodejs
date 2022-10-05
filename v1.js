@@ -20,7 +20,7 @@ module.exports = () => {
     // TODO: Please update this request body
 
     // This should be string
-    const referenceId = req.reference_id
+    const referenceId = req.body.reference_id;
 
     /**
      * {Object}
@@ -30,7 +30,7 @@ module.exports = () => {
      *   "currency": "VND"
      * }
      */
-    const totalAmount = req.total_amount
+    const totalAmount = req.body.total_amount;
 
     /**
      * {Array<Object>}
@@ -54,7 +54,7 @@ module.exports = () => {
      *   }
      * ]
      */
-    const orderLines = req.order_lines
+    const orderLines = req.body.order_lines;
 
     // This is a recipient bank account info
     /**
@@ -73,24 +73,26 @@ module.exports = () => {
       branch: "",
       bank: "XXX Bank",
       type: "BANK_ACCOUNT"
-    }
+    };
 
     try {
-      const credify = await Credify.create(formKey(signingKey), apiKey, { mode })
+      const credify = await Credify.create(formKey(signingKey), apiKey, {
+        mode,
+      });
       const data = await credify.bnpl.createOrder(
         referenceId,
         totalAmount,
         orderLines,
         paymentRecipient
-      )
-      res.json(data)
+      );
+      res.json(data);
     } catch (e) {
-      res.status(400).json({ error: { message: e.message } })
+      res.status(400).json({ error: { message: e.message } });
     }
-  })
+  });
 
-  api.post("/simulate", async (req, res) => {
-    const productType = "consumer-financing:unsecured-loan:bnpl"
+  api.post("/simulation", async (req, res) => {
+    const productType = "consumer-financing:unsecured-loan:bnpl";
 
     // TODO: Please update this request body
 
@@ -121,16 +123,30 @@ module.exports = () => {
      *   }
      * }
      */
-    const inputs = req.body.inputs
+    let inputs = req.body.inputs;
+    inputs = {
+      ...inputs,
+      product: {
+        manufacturer: "temp",
+        category: "temp",
+        name: "temp",
+      },
+    };
 
     try {
-      const credify = await Credify.create(formKey(signingKey), apiKey, { mode })
-      const response = await credify.offer.simulate(productType, providerIds, inputs)
-      res.json(response)
+      const credify = await Credify.create(formKey(signingKey), apiKey, {
+        mode,
+      });
+      const response = await credify.offer.simulate(
+        productType,
+        providerIds,
+        inputs
+      );
+      res.json(response);
     } catch (e) {
-      res.status(400).json({ error: { message: e.message } })
+      res.status(400).json({ error: { message: e.message } });
     }
-  })
+  });
 
   api.post("/webhook", async (req, res) => {
     try {
@@ -192,6 +208,52 @@ module.exports = () => {
     }
     res.redirect(bnplCallbackUrl)
   })
+
+  api.post("/offers", async (req, res) => {
+    // This should be string
+    const localId = req.body.local_id;
+
+    /**
+     * {Object}
+     * @example
+     * {
+      "phone_number": "999720410",
+      "country_code": "+81",
+      "credify_id": "38e67621-b57e-4eb1-b2ae-66eb3f9817f0",
+      "product_types": [
+        "consumer-financing:unsecured-loan:bnpl"
+      }]
+      "bnpl": {
+          "item_category": "string",
+          "item_count": 0,
+          "total_amount": {
+          "value": "30000000.00",
+          "currency": "VND"
+        }
+      }
+     * */
+    const inputs = {
+      phone_number: req.body.phone_number,
+      country_code: req.body.country_code,
+      credify_id: req.body.credify_id,
+      product_types: req.body.product_types,
+      bnpl: {
+        item_category: req.body.bnpl.item_category,
+        item_count: req.body.bnpl.item_count,
+        total_amount: req.body.bnpl.total_amount,
+      },
+    };
+
+    try {
+      const credify = await Credify.create(formKey(signingKey), apiKey, {
+        mode,
+      });
+      const response = await credify.offer.getList(localId, inputs);
+      res.json(response);
+    } catch (e) {
+      res.status(400).json({ error: { message: e.message } });
+    }
+  });
 
   return api
 }
