@@ -1,12 +1,15 @@
 const { Router } = require("express")
 const { Credify } = require("@credify/nodejs")
-const { formKey } = require("./utils")
+const { formKey, getCategoryItem } = require("./utils")
 const {WEBHOOK_EVENTS} = require("./constants");
+const axios = require("axios");
+const dotenv = require('dotenv');
+dotenv.config();
 
-const signingKey = ""
-const apiKey = ""
-const mode = "sandbox" // "sandbox" or "production"
-const apiDomain = "https://stg.api.dienthoaigiakho.vn"
+const signingKey = process.env.SIGNING_KEY
+const apiKey = process.env.API_KEY
+const mode = process.env.MODE // "sit" or "production"
+const apiDomain = process.env.URL_BASE_MARKET_API
 
 module.exports = () => {
   const api = Router()
@@ -19,7 +22,7 @@ module.exports = () => {
     // TODO: Please update this request body
 
     // This should be string
-    const referenceId = req.reference_id
+    const referenceId = req.body.reference_id;
 
     /**
      * {Object}
@@ -29,7 +32,7 @@ module.exports = () => {
      *   "currency": "VND"
      * }
      */
-    const totalAmount = req.total_amount
+    const totalAmount = req.body.total_amount;
 
     /**
      * {Array<Object>}
@@ -53,7 +56,7 @@ module.exports = () => {
      *   }
      * ]
      */
-    const orderLines = req.order_lines
+    const orderLines = req.body.order_lines;
 
     // This is a recipient bank account info
     /**
@@ -71,30 +74,34 @@ module.exports = () => {
       number: "0020100026725004",
       branch: "006",
       bank: "333",
-      type: "BANK_ACCOUNT"
+      type: "BANK_ACCOUNT",
     };
 
     try {
-      const credify = await Credify.create(formKey(signingKey), apiKey, { mode })
+      const credify = await Credify.create(formKey(signingKey), apiKey, {
+        mode,
+      });
       const data = await credify.bnpl.createOrder(
         referenceId,
         totalAmount,
         orderLines,
         paymentRecipient
-      )
-      res.json(data)
+      );
+      res.json(data);
     } catch (e) {
-      res.status(400).json({ error: { message: e.message } })
+      res.status(400).json({ error: { message: e.message } });
     }
-  })
+  });
 
-  api.post("/simulate", async (req, res) => {
-    const productType = "consumer-financing:unsecured-loan:bnpl"
+  api.post("/simulation", async (req, res) => {
+    const productType = req.body.product_type;
 
     // TODO: Please update this request body
 
     // This should be string array (can be empty)
-    const providerIds = req.body.provider_ids
+    const providerIds = req.body.provider_ids || [
+      "09de7359-7f29-41a0-bd07-095d1ce7f85d",
+    ];
 
     // This should be an object
     /**
@@ -120,16 +127,30 @@ module.exports = () => {
      *   }
      * }
      */
-    const inputs = req.body.inputs
+    let inputs = req.body.inputs;
+    inputs = {
+      ...inputs,
+      product: {
+        manufacturer: "temp",
+        category: "temp",
+        name: "temp",
+      },
+    };
 
     try {
-      const credify = await Credify.create(formKey(signingKey), apiKey, { mode })
-      const response = await credify.offer.simulate(productType, providerIds, inputs)
-      res.json(response)
+      const credify = await Credify.create(formKey(signingKey), apiKey, {
+        mode,
+      });
+      const response = await credify.offer.simulate(
+        productType,
+        providerIds,
+        inputs
+      );
+      res.json(response);
     } catch (e) {
-      res.status(400).json({ error: { message: e.message } })
+      res.status(400).json({ error: { message: e.message } });
     }
-  })
+  });
 
   api.post("/webhook", async (req, res) => {
     try {
@@ -225,5 +246,49 @@ module.exports = () => {
     res.redirect(url)
   })
 
-  return api
+  api.post("/offers", async (req, res) => {
+    // This should be string
+    const localId = req.body.local_id;
+
+    /**
+     * {Object}
+     * {
+      "phone_number": "999720410",
+      "country_code": "+81",
+      "credify_id": "38e67621-b57e-4eb1-b2ae-66eb3f9817f0",
+      "product_types": [
+        "consumer-financing:unsecured-loan:bnpl"
+      }]
+      "bnpl": {
+          "item_category": "string",
+          "item_count": 0,
+          "total_amount": {
+          "value": "30000000.00",
+          "currency": "VND"
+        }
+      }
+     * */
+    const inputs = {
+      phone_number: req.body.phone_number,
+      country_code: req.body.country_code,
+      credify_id: req.body.credify_id,
+      product_types: req.body.product_types,
+      bnpl: {
+        item_category: getCategoryItem(req.body.bnpl.item_category),
+        item_count: req.body.bnpl.item_count,
+        total_amount: req.body.bnpl.total_amount,
+      },
+    };
+    try {
+      const credify = await Credify.create(formKey(signingKey), apiKey, {
+        mode,
+      });
+      const response = await credify.offer.getList(localId, inputs);
+      res.json(response);
+    } catch (e) {
+      res.status(400).json({ error: { message: e.message } });
+    }
+  });
+
+  return api;
 }
