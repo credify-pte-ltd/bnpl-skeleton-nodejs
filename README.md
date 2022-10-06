@@ -21,6 +21,8 @@ This exposes 3 endpoints
   - This simulates loan use. This is not mandatory to use. If you want to render loan summary provided through serviceX inside your platform, you can use this function. 
 - `[POST] /v1/webhook`
   - This handles webhook requests from Credify. You are supposed to register this endpoint on serviceX Dashboard.
+- `[POST] /v1/offers`
+  - This fetches active offers for a requesting claim provider. This list is filtered with data receiver's DB.
 - `[GET] /v1/bnpl/orders/:orderId/redirect`
   - This returns BNPL completion page. Service Providers redirect users to this URL when BNPL authorization is done.
 
