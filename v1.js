@@ -10,6 +10,8 @@ const signingKey = process.env.SIGNING_KEY
 const apiKey = process.env.API_KEY
 const mode = process.env.MODE // "sit" or "production"
 const apiDomain = process.env.URL_BASE_MARKET_API
+const domainSuccessPage =
+  process.env.URL_SUCCESS_PAGE || "https://dienthoaigiakho.vn";
 
 module.exports = () => {
   const api = Router()
@@ -240,10 +242,7 @@ module.exports = () => {
   api.get("/bnpl/orders/:orderId/redirect", async (req, res) => {
     const orderId = req.params.orderId;
     const isError = !!req.query.error_message;
-
-    const base = "https://dienthoaigiakho.vn"
-
-    const url = isError ? `${base}/mua-tra-gop` : `${base}/mua-tra-gop/success`;
+    const url = isError ? `${domainSuccessPage}/mua-tra-gop/cancel` : `${domainSuccessPage}/mua-tra-gop/success`;
 
     if (!orderId) {
       return res.sendStatus(500).json({ message: "No order ID" })
