@@ -201,8 +201,15 @@ module.exports = () => {
     }
   })
 
+  api.post("/push-claims", async (req, res) => {
+    // Nothing to do. Just return 200 status
+    res.status(200).json({ credifyId: "" })
+  })
+
   api.get("/bnpl/orders/:orderId/redirect", async (req, res) => {
     const orderId = req.params.orderId;
+    const isError = !!req.query.error_message;
+
     if (!orderId) {
       return res.sendStatus(500).json({ message: "No order ID" })
     }
