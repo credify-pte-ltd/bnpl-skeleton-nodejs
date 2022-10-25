@@ -21,7 +21,19 @@ const getCategoryItem = (categoryType) => {
   return "";
 };
 
+const mapCategoryFromOrderLine = (orderLines) => {
+  if(!orderLines) return [];
+
+  const result = JSON.parse(JSON.stringify(orderLines));
+
+  return result.map((orderLine) => {
+    orderLine.category = getCategoryItem(orderLine.category);
+    return orderLine;
+  });
+};
+
 module.exports = {
   formKey,
-  getCategoryItem
+  getCategoryItem,
+  mapCategoryFromOrderLine
 };

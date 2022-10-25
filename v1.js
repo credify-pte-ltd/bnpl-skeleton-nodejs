@@ -1,6 +1,6 @@
 const { Router } = require("express")
 const { Credify } = require("@credify/nodejs")
-const { formKey, getCategoryItem } = require("./utils")
+const { formKey, getCategoryItem, mapCategoryFromOrderLine } = require("./utils")
 const {WEBHOOK_EVENTS} = require("./constants");
 const axios = require("axios");
 const dotenv = require('dotenv');
@@ -58,7 +58,7 @@ module.exports = () => {
      *   }
      * ]
      */
-    const orderLines = req.body.order_lines;
+    const orderLines = mapCategoryFromOrderLine(req.body.order_lines);
 
     // This is a recipient bank account info
     /**
