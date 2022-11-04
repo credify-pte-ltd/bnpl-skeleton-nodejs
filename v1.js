@@ -103,6 +103,7 @@ module.exports = () => {
     // This should be string array (can be empty)
     const providerIds = req.body.provider_ids || [
       "09de7359-7f29-41a0-bd07-095d1ce7f85d",
+      "64cf7620-9ac1-4d46-849e-db5eb34a7cef"
     ];
 
     // This should be an object
