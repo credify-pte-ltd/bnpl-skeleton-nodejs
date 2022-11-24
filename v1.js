@@ -201,11 +201,6 @@ module.exports = () => {
     }
   })
 
-  api.post("/api/claims/push", async (req, res) => {
-    // Nothing to do. Just return 200 status
-    res.status(200).json({ credifyId: "" })
-  })
-
   api.get("/api/bnpl/orders/:orderId/redirect", async (req, res) => {
     const orderId = req.params.orderId;
     const isError = !!req.query.error_message;
@@ -261,6 +256,11 @@ module.exports = () => {
       res.status(400).json({ error: { message: e.message } });
     }
   });
+
+  api.post("/api/claims/push", async (req, res) => {
+    // Nothing to do. Just return 200 status
+    res.status(200).json({ credifyId: "" })
+  })
 
   return api
 }
