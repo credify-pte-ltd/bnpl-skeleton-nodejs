@@ -203,6 +203,7 @@ module.exports = () => {
 
   api.get("/api/bnpl/orders/:orderId/redirect", async (req, res) => {
     const orderId = req.params.orderId;
+    const isError = !!req.query.error_message;
 
     if (!orderId) {
       return res.sendStatus(500).json({ message: "No order ID" })
